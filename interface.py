@@ -113,24 +113,22 @@ class Connect4:
                 col += col_change
 
             # if there is an empty space, count it as a potential score
-            elif self.buttons[row][col]["text"] == "" and count >= 3:
+            elif self.buttons[row][col]["text"] == "":
                 potential_count += 1
                 row += row_change
                 col += col_change
 
                 # if there are similar pieces after gap, count it as aditional potential score
-                while 0 <= row < 6 and 0 <= col < 7 and self.buttons[row][col]["text"] == player:
+                i = 0
+                while 0 <= row < 6 and 0 <= col < 7 and self.buttons[row][col]["text"] == player and i < 2:
+                    print("right potential score")
                     row += row_change
                     col += col_change
+                    i += 1
                     potential_count += 1
                 break
             else:
                 break
-
-        if count > 4:
-            count = 4
-
-        right_count = count
 
         # reset to starting position
         row = r - row_change
@@ -145,22 +143,25 @@ class Connect4:
                 col -= col_change
 
             # if there is an empty space, count it as a potential score
-            elif self.buttons[row][col]["text"] == "" and count >= 3:
+            elif self.buttons[row][col]["text"] == "":
+                print("left potential score")
                 potential_count += 1
                 row -= row_change
                 col -= col_change
 
                 # if there are similar pieces after gap, count it as aditional potential score
-                while 0 <= row < 6 and 0 <= col < 7 and self.buttons[row][col]["text"] == player:
+                i = 0
+                while 0 <= row < 6 and 0 <= col < 7 and self.buttons[row][col]["text"] == player and i < 2:
                     row -= row_change
                     col -= col_change
+                    i += 1
                     potential_count += 1
                 break
             else:
                 break
 
-        if count - right_count > 3:
-            count = right_count + 3
+        if count < 3:
+            potential_count = max(0, count + potential_count - 3)
 
         score = max(0, count - 3)
         return score, potential_count
