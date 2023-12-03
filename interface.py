@@ -42,6 +42,7 @@ class Connect4:
 
                 # check for score and potential score
                 result = self.check_score(r, col)
+                print(f"score: {result[0]}\tpotential: {result[1]}")
 
                 # update score and potential score
                 if self.current_player == 'Yellow':
@@ -97,74 +98,67 @@ class Connect4:
 
     def check_line(self, row, col, row_change, col_change):
         player = self.current_player
-        count = 0
+        count = 1
         potential_count = 0
 
         # keep track of original play
         r = row
         c = col
 
+        row += row_change
+        col += col_change
+
         # Check in both directions from the dropped piece
-        while 0 <= row < 6 and 0 <= col < 7:
+        while 0 <= row < 6 and 0 <= col < 7 and self.buttons[row][col]["text"] == player:
             # count consecutive pieces of the same color
-            if self.buttons[row][col]["text"] == player:
-                count += 1
-                row += row_change
-                col += col_change
+            count += 1
+            row += row_change
+            col += col_change
 
-            # if there is an empty space, count it as a potential score
-            elif self.buttons[row][col]["text"] == "":
-                potential_count += 1
-                row += row_change
-                col += col_change
-
-                # if there are similar pieces after gap, count it as aditional potential score
-                i = 0
-                while 0 <= row < 6 and 0 <= col < 7 and self.buttons[row][col]["text"] == player and i < 2:
-                    print("right potential score")
-                    row += row_change
-                    col += col_change
-                    i += 1
-                    potential_count += 1
-                break
-            else:
-                break
-
+        right_gap = (row, col) if 0 <= row < 6 and 0 <= col < 7 and self.buttons[row][col]["text"] == "" else None
         # reset to starting position
         row = r - row_change
         col = c - col_change
 
         # check in the opposite direction
-        while 0 <= row < 6 and 0 <= col < 7:
+        while 0 <= row < 6 and 0 <= col < 7 and self.buttons[row][col]["text"] == player:
             # count consecutive pieces of the same color
-            if self.buttons[row][col]["text"] == player:
-                count += 1
-                row -= row_change
-                col -= col_change
+            count += 1
+            row -= row_change
+            col -= col_change
 
-            # if there is an empty space, count it as a potential score
-            elif self.buttons[row][col]["text"] == "":
-                print("left potential score")
-                potential_count += 1
-                row -= row_change
-                col -= col_change
-
-                # if there are similar pieces after gap, count it as aditional potential score
-                i = 0
-                while 0 <= row < 6 and 0 <= col < 7 and self.buttons[row][col]["text"] == player and i < 2:
-                    row -= row_change
-                    col -= col_change
-                    i += 1
-                    potential_count += 1
-                break
-            else:
-                break
-
-        if count < 3:
-            potential_count = max(0, count + potential_count - 3)
+        left_gap = (row, col) if 0 <= row < 6 and 0 <= col < 7 and self.buttons[row][col]["text"] == "" else None
 
         score = max(0, count - 3)
-        return score, potential_count
+        count = min(3, count)
+
+        right_potential = count - 2
+        if right_gap:
+            i, j = right_gap[0]+row_change, right_gap[1]+col_change
+            for _ in range(2):
+                if 0 <= i < 6 and 0 <= j < 7 and self.buttons[i][j]["text"] == player:
+                    right_potential += 1
+                    i += row_change
+                    j += col_change
+                else:
+                    break
+
+        left_potential = count - 2
+        if left_gap:
+            i, j = left_gap[0]-row_change, left_gap[1]-col_change
+            for _ in range(2):
+
+                if 0 <= i < 6 and 0 <= j < 7 and self.buttons[i][j]["text"] == player:
+                    left_potential += 1
+                    i -= row_change
+                    j -= col_change
+                else:
+                    break
+
+        right_potential = max(0, right_potential)
+        left_potential = max(0, left_potential)
+
+        return score, right_potential + left_potential
 
     def display_winner(self):
         winner_label = tk.Label(self.window, text=f"{self.current_player} wins!", font=("Helvetica", 16, "bold"))
