@@ -13,10 +13,14 @@ class Connect4:
     # width and height of cells in pixels
     WIDTH = 65
     HEIGHT = 70
-    DEPTH = 7
-    PRUNING = True
+    DEPTH = 4
+    PRUNING = False
+    EXCPECTIMAX = True
 
     def __init__(self):
+
+        # create the minimax agent
+        self.minimax = Minimax(self, self.DEPTH, pruning=self.PRUNING, expectimax=self.EXCPECTIMAX)
 
         # keep track of the board
         self.board = [[0] * 7 for _ in range(6)]
@@ -31,8 +35,6 @@ class Connect4:
         # is the game over?
         self.game_over = 7
 
-        # create the minimax agent
-        self.minimax = Minimax(self, self.DEPTH, pruning=self.PRUNING)
 
         # keep track of scores and potential scores
         self.player_score = 0
