@@ -15,7 +15,7 @@ class Connect4:
     HEIGHT = 70
     DEPTH = 4
     PRUNING = False
-    EXCPECTIMAX = True
+    EXCPECTIMAX = False
 
     def __init__(self):
 

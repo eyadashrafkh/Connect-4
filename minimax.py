@@ -207,7 +207,15 @@ class Minimax:
                         v1 = values[i] * 0.6
                         v2 = values[(i-1) % 7] * 0.2
                         v3 = values[(i+1) % 7] * 0.2
-                        value = max(v1, v2, v3)
+
+                        value = v1
+                        if v2 > v1 and v2 > v3:
+                            i = (i-1) % 7
+                            value = v2
+                        elif v3 > v1 and v3 > v2:
+                            i = (i+1) % 7
+                            value = v3
+
                 else:
                     value, _ = self.minimax(state.generate_child(i), depth - 1, pruning=False)
 
