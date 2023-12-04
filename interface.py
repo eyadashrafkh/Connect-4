@@ -13,13 +13,9 @@ class Connect4:
     # width and height of cells in pixels
     WIDTH = 65
     HEIGHT = 70
-<<<<<<< HEAD
-    DEPTH = 5
-=======
     DEPTH = 4
     PRUNING = False
     EXCPECTIMAX = False
->>>>>>> 2ada41cd0063d92f6f9888af0f03962a99619f40
 
     def __init__(self):
 
