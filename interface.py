@@ -21,7 +21,7 @@ class Connect4:
         self.board = [[0] * 7 for _ in range(6)]
 
         # keep track of the current player
-        self.current_player = 'Red'
+        self.current_player = PLAYER
         self.is_player_turn = True
 
         # keep track of possible moves
@@ -77,19 +77,20 @@ class Connect4:
                     self.game_over -= 1
 
                 # update board
-                self.board[r][col] = 1 if self.current_player == 'red' else -1
+                self.board[r][col] = self.current_player
 
                 # place the piece
-                img = self.YELLOW_IMAGE if self.current_player == 'Yellow' else self.RED_IMAGE
+                img = self.YELLOW_IMAGE if self.current_player == AI else self.RED_IMAGE
                 self.buttons[r][col].config(image=img, width=self.WIDTH, height=self.HEIGHT)
                 self.buttons[r][col]["text"] = self.current_player
 
                 # check for score and potential score
                 result = self.check_score(r, col)
                 print(f"score: {result[0]}\tpotential: {result[1]}")
+                # print(f"utility: {self.ai_score - self.player_score + 0.5*self.ai_potential_score - 0.5*self.player_potential_score}")
 
                 # update score and potential score
-                if not self.current_player == 'Yellow':
+                if self.current_player == AI:
                     self.ai_score += result[0]
                     self.ai_potential_score -= result[0]
                     self.ai_potential_score += result[1]
@@ -98,13 +99,13 @@ class Connect4:
                     self.player_potential_score -= result[0]
                     self.player_potential_score += result[1]
 
-                self.current_player = 'Yellow' if self.current_player == 'Red' else 'Red'
+                self.current_player = -self.current_player
 
                 # check for score and potential score for opposite color
                 result = self.check_score(r, col)
 
                 # update score and potential score
-                if self.current_player == 'Yellow':
+                if self.current_player == AI:
                     self.ai_potential_score -= result[0]
                 else:
                     self.player_potential_score -= result[0]
@@ -202,7 +203,7 @@ class Connect4:
             if right_gap:
                 right_potential = self.check_score(right_gap[0], right_gap[1], False)[0]
                 temp = right_potential
-                if player == 'Red':
+                if player == PLAYER:
                     right_potential = right_potential - self.player_potentials[right_gap[0]][right_gap[1]]
                     self.player_potentials[right_gap[0]][right_gap[1]] = temp
                 else:
@@ -212,7 +213,7 @@ class Connect4:
             if left_gap:
                 left_potential = self.check_score(left_gap[0], left_gap[1], False)[0]
                 temp = left_potential
-                if player == 'Red':
+                if player == PLAYER:
                     left_potential = left_potential - self.player_potentials[left_gap[0]][left_gap[1]]
                     self.player_potentials[left_gap[0]][left_gap[1]] = temp
                 else:

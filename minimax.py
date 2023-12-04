@@ -4,8 +4,10 @@ from copy import deepcopy
 AI = -1
 PLAYER = 1
 
+
 def is_valid(row, col):
     return 0 <= row < 6 and 0 <= col < 7
+
 
 class State:
     def __init__(self, board, moves, ai_score, player_score, ai_potential_score, player_potential_score,
@@ -60,7 +62,7 @@ class State:
 
         # Check for a winning condition (horizontal, vertical, diagonal)
         return [sum(x) for x in zip(
-            self.check_line(row, col, 0, 1, player_potentials, ai_potentials,potential),  # -
+            self.check_line(row, col, 0, 1, player_potentials, ai_potentials, potential),  # -
             self.check_line(row, col, 1, 0, player_potentials, ai_potentials, potential),  # |
             self.check_line(row, col, 1, 1, player_potentials, ai_potentials, potential),  # /
             self.check_line(row, col, -1, 1, player_potentials, ai_potentials, potential)  # \
@@ -140,7 +142,7 @@ class State:
             return [score]
 
     def utility(self):
-        return self.ai_score - self.player_score + 0.5 * (self.ai_potential_score - self.player_potential_score)
+        return self.ai_score - self.player_score + 0.75 * (self.ai_potential_score - self.player_potential_score)
 
 
 class Minimax:
@@ -149,6 +151,7 @@ class Minimax:
         self.depth = depth
 
     def minimax(self, state, depth):
+        print(f"depth: {depth}, player: {state.player}, score: {state.utility()}")
         if depth == 0 or state.game_over == 0:
             return state.utility(), None
 
