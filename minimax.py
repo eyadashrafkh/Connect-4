@@ -1,9 +1,9 @@
 import math
-from copy import deepcopy
+from copy import deepcopy, copy
 
 AI = -1
 PLAYER = 1
-
+VERBOSE = False
 
 def is_valid(row, col):
     return 0 <= row < 6 and 0 <= col < 7
@@ -31,16 +31,22 @@ class State:
         board[row][col] = self.player
 
         # update moves
-        moves = deepcopy(self.moves)
+        moves = copy(self.moves)
         moves[col] += 1
 
+        # check for game over
+        game_over = self.game_over
+        if moves[col] == 6:
+            game_over -= 1
+
         # change player
-        player = AI if self.player == PLAYER else PLAYER
+        player = -self.player
 
-
+        # update potentials
         player_potentials = deepcopy(self.player_potentials)
         ai_potentials = deepcopy(self.ai_potentials)
         score, potential = self.check_score(row, col, player_potentials, ai_potentials, True)
+        # print(f"score: {score}, potential: {potential} at {row}, {col}")
         ai_score = self.ai_score
         player_score = self.player_score
         ai_potential_score = self.ai_potential_score
@@ -55,8 +61,20 @@ class State:
             ai_potential_score += potential
             ai_score += score
 
+
+        # check for score and potential score for opposite color
+        self.player = -self.player
+        result = self.check_score(row, col, potential=False)
+        self.player = -self.player
+
+        # update score and potential score
+        if self.player == PLAYER:
+            ai_potential_score -= result[0]
+        else:
+            player_potential_score -= result[0]
+
         return State(board, moves, ai_score, player_score, ai_potential_score, player_potential_score,
-                     self.player_potentials, self.ai_potentials, self.game_over, player)
+                     player_potentials, ai_potentials, game_over, player)
 
     def check_score(self, row, col, player_potentials=None, ai_potentials=None, potential=False):
 
@@ -146,12 +164,19 @@ class State:
 
 
 class Minimax:
-    def __init__(self, game, depth):
+    def __init__(self, game, depth, pruning=True):
         self.game = game
         self.depth = depth
+        self.pruning = pruning
 
-    def minimax(self, state, depth):
-        print(f"depth: {depth}, player: {state.player}, score: {state.utility()}")
+        if pruning:
+            self.alpha = -math.inf
+            self.beta = math.inf
+
+    def minimax(self, state, depth, alpha=-math.inf, beta=math.inf, pruning=True):
+        if VERBOSE:
+            print(f"depth: {depth}, player: {state.player}, score: {state.utility()}")
+
         if depth == 0 or state.game_over == 0:
             return state.utility(), None
 
@@ -163,7 +188,14 @@ class Minimax:
                 if move >= 6:
                     continue
 
-                value, _ = self.minimax(state.generate_child(i), depth - 1)
+                if pruning:
+                    value, _ = self.minimax(state.generate_child(i), depth - 1, alpha, beta)
+                    alpha = max(alpha, value)
+                    if alpha >= beta:
+                        return value, i
+                else:
+                    value, _ = self.minimax(state.generate_child(i), depth - 1, pruning=False)
+
                 if value > best_value:
                     best_value = value
                     best_move = i
@@ -176,7 +208,14 @@ class Minimax:
                 if move >= 6:
                     continue
 
-                value, _ = self.minimax(state.generate_child(i), depth - 1)
+                if pruning:
+                    value, _ = self.minimax(state.generate_child(i), depth - 1, alpha, beta)
+                    beta = min(beta, value)
+                    if alpha >= beta:
+                        return value, i
+                else:
+                    value, _ = self.minimax(state.generate_child(i), depth - 1, pruning=False)
+
                 if value < best_value:
                     best_value = value
                     best_move = i
@@ -187,6 +226,9 @@ class Minimax:
                       self.game.ai_potential_score, self.game.player_potential_score, self.game.player_potentials,
                       self.game.ai_potentials, self.game.game_over, AI)
         # get the best move
-        _, move = self.minimax(state, self.depth)
+        if self.pruning:
+            _, move = self.minimax(state, self.depth, self.alpha, self.beta)
+        else:
+            _, move = self.minimax(state, self.depth, pruning=False)
 
         return move
