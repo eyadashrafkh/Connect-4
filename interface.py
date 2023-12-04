@@ -13,8 +13,7 @@ class Connect4:
     # width and height of cells in pixels
     WIDTH = 65
     HEIGHT = 70
-    DEPTH = 7
-    PRUNING = True
+    DEPTH = 5
 
     def __init__(self):
 
@@ -59,11 +58,11 @@ class Connect4:
         self.create_board()
 
     def load_images(self):
-        img = Image.open('AI_college/assigment_two/assets/red.png')
+        img = Image.open('assets/red.png')
         img = img.resize((self.WIDTH, self.HEIGHT))
         self.RED_IMAGE = ImageTk.PhotoImage(img)
 
-        img = Image.open('AI_college/assigment_two/assets/yellow.png')
+        img = Image.open('assets/yellow.png')
         img = img.resize((self.WIDTH, self.HEIGHT))
         self.YELLOW_IMAGE = ImageTk.PhotoImage(img)
 
