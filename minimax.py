@@ -164,10 +164,11 @@ class State:
 
 
 class Minimax:
-    def __init__(self, game, depth, pruning=True):
+    def __init__(self, game, depth, pruning=True, expectimax=False):
         self.game = game
         self.depth = depth
         self.pruning = pruning
+        self.expectimax = expectimax
 
         if pruning:
             self.alpha = -math.inf
@@ -180,9 +181,14 @@ class Minimax:
         if depth == 0 or state.game_over == 0:
             return state.utility(), None
 
+        if self.expectimax:
+            values = [0] * 7
+
         if state.player == AI:
             best_value = -math.inf
+
             best_move = None
+
             for i, move in enumerate(state.moves):
                 # skip if column is full
                 if move >= 6:
@@ -193,12 +199,30 @@ class Minimax:
                     alpha = max(alpha, value)
                     if alpha >= beta:
                         return value, i
+                elif self.expectimax:
+                    values, _ = self.minimax(state.generate_child(i), depth - 1, pruning=False)
+                    if type(values) is float:
+                        value = values
+                    else:
+                        v1 = values[i] * 0.6
+                        v2 = values[(i-1) % 7] * 0.2
+                        v3 = values[(i+1) % 7] * 0.2
+
+                        value = v1
+                        if v2 > v1 and v2 > v3:
+                            i = (i-1) % 7
+                            value = v2
+                        elif v3 > v1 and v3 > v2:
+                            i = (i+1) % 7
+                            value = v3
+
                 else:
                     value, _ = self.minimax(state.generate_child(i), depth - 1, pruning=False)
 
                 if value > best_value:
                     best_value = value
                     best_move = i
+
             return best_value, best_move
         else:
             best_value = math.inf
@@ -206,20 +230,32 @@ class Minimax:
             for i, move in enumerate(state.moves):
                 # skip if column is full
                 if move >= 6:
+                    if self.expectimax:
+                        values[i] = -math.inf
                     continue
 
                 if pruning:
-                    value, _ = self.minimax(state.generate_child(i), depth - 1, alpha, beta)
-                    beta = min(beta, value)
+                    value, _ = self.minimax(state.generate_child(i), depth - 1, alpha, beta)# (10, 4)
+                    # (12, 3)
+                    beta = min(beta, value)                                                 # (15, 5)
                     if alpha >= beta:
                         return value, i
+                elif self.expectimax:
+                    values[i], _ = self.minimax(state.generate_child(i), depth - 1, pruning=False)
+                    value = values[i]
                 else:
                     value, _ = self.minimax(state.generate_child(i), depth - 1, pruning=False)
 
+                # update best value and move
                 if value < best_value:
                     best_value = value
                     best_move = i
+            # return all values if expectimax
+            if self.expectimax:
+                return values, best_move
+
             return best_value, best_move
+
 
     def play(self):
         state = State(self.game.board, self.game.moves, self.game.ai_score, self.game.player_score,
