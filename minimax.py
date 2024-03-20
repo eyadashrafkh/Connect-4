@@ -213,8 +213,22 @@ class Minimax:
                     continue
 
                 if pruning:
-                    value, _ = self.minimax(state.generate_child(i), depth - 1, alpha, beta, parent_id=id)
-                    my_print(f"current move -> move: {i}, value: {value}")
+                    values, _ = self.minimax(state.generate_child(i), depth - 1, alpha, beta, parent_id=id)
+                    my_print(f"current move -> move: {i}, value: {values}")
+                    # print(f"alpha: {alpha}, beta: {beta}, value: {values}")
+
+                    if self.expectimax:
+                        if type(values) is float:
+                            value = values
+                        else:
+                            v1 = values[i] * 0.6
+                            v2 = values[(i - 1) % 7] * 0.2
+                            v3 = values[(i + 1) % 7] * 0.2
+
+                            value = (v1 + v2 + v3) / 3
+                    else:
+                        value = values
+
                     alpha = max(alpha, value)
                     if alpha >= beta:
                         return value, i
@@ -232,7 +246,7 @@ class Minimax:
                 else:
                     value, _ = self.minimax(state.generate_child(i), depth - 1,  parent_id=id, pruning=False)
 
-                if value > best_value:
+                if value > best_value or best_move == None:
                     best_value = value
                     best_move = i
 
@@ -260,7 +274,7 @@ class Minimax:
                     value, _ = self.minimax(state.generate_child(i), depth - 1,  parent_id=id, pruning=False)
 
                 # update best value and move
-                if value < best_value:
+                if value < best_value or best_move == None:
                     best_value = value
                     best_move = i
             # return all values if expectimax
@@ -283,5 +297,5 @@ class Minimax:
 
         # my_print(f"move: {move}, value: {v}")
         self.ID_COUNTER = 1
-        # self.tree.show()
+        self.tree.show()
         return move

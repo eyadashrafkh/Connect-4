@@ -14,9 +14,9 @@ class Connect4:
     # width and height of cells in pixels
     WIDTH = 65
     HEIGHT = 70
-    DEPTH = 7
+    DEPTH = 3
     PRUNING = True
-    EXCPECTIMAX = False
+    EXCPECTIMAX = True
 
     def __init__(self):
 
@@ -72,6 +72,7 @@ class Connect4:
     def drop_piece(self, row, col):
 
         for r in range(5, row - 1, -1):
+            print(f"r: {r}\tcol: {col}")
             if self.buttons[r][col]["text"] == "":
 
                 # update possible moves
