@@ -2,6 +2,7 @@ import tkinter as tk
 from PIL import Image, ImageTk
 from minimax import Minimax
 
+
 def is_valid(row, col):
     # checks if the indices are valid
     return 0 <= row < 6 and 0 <= col < 7
@@ -13,8 +14,8 @@ class Connect4:
     # width and height of cells in pixels
     WIDTH = 65
     HEIGHT = 70
-    DEPTH = 4
-    PRUNING = False
+    DEPTH = 7
+    PRUNING = True
     EXCPECTIMAX = False
 
     def __init__(self):
@@ -34,7 +35,6 @@ class Connect4:
 
         # is the game over?
         self.game_over = 7
-
 
         # keep track of scores and potential scores
         self.player_score = 0
@@ -89,7 +89,7 @@ class Connect4:
 
                 # check for score and potential score
                 result = self.check_score(r, col)
-                print(f"score: {result[0]}\tpotential: {result[1]}")
+                # print(f"score: {result[0]}\tpotential: {result[1]}")
                 # print(f"utility: {self.ai_score - self.player_score + 0.5*self.ai_potential_score - 0.5*self.player_potential_score}")
 
                 # update score and potential score
@@ -137,7 +137,8 @@ class Connect4:
 
     def update_score(self):
         self.score_label.config(text=f"yellow: {self.ai_score}\tred: {self.player_score}")
-        print(f"red pot: {self.player_potential_score}\tyellow pot: {self.ai_potential_score}")
+        # print(f"red pot: {self.player_potential_score}\tyellow pot: {self.ai_potential_score}")
+        # print("-" * 50)
 
     def place_piece(self, btn, img):
         btn.config(image=img)
@@ -238,7 +239,7 @@ class Connect4:
     def AI(self):
         self.is_player_turn = False
         move = self.minimax.play()
-        print(f"move: {move}")
+        # print(f"move: {move}")
         self.drop_piece(0, move)
 
     def switch_turns(self):

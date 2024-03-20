@@ -1,10 +1,14 @@
 import math
+import treelib
 from copy import deepcopy, copy
+
+def my_print(str):
+    pass
 
 AI = -1
 PLAYER = 1
 VERBOSE = False
-
+# ID_COUNTER = 0
 def is_valid(row, col):
     return 0 <= row < 6 and 0 <= col < 7
 
@@ -26,7 +30,7 @@ class State:
 
     def generate_child(self, col):
         # create new board
-        row = self.moves[col]
+        row = 5 - self.moves[col]
         board = deepcopy(self.board)
         board[row][col] = self.player
 
@@ -45,8 +49,11 @@ class State:
         # update potentials
         player_potentials = deepcopy(self.player_potentials)
         ai_potentials = deepcopy(self.ai_potentials)
+        my_print(self.board)
+        self.board[row][col] = self.player
         score, potential = self.check_score(row, col, player_potentials, ai_potentials, True)
-        # print(f"score: {score}, potential: {potential} at {row}, {col}")
+        self.board[row][col] = 0
+        my_print(f"score: {score}, potential: {potential} at {row}, {col}")
         ai_score = self.ai_score
         player_score = self.player_score
         ai_potential_score = self.ai_potential_score
@@ -63,30 +70,30 @@ class State:
 
 
         # check for score and potential score for opposite color
-        self.player = -self.player
-        result = self.check_score(row, col, potential=False)
-        self.player = -self.player
+        # self.player = -self.player
+        # result = self.check_score(row, col, potential=False)
+        # self.player = -self.player
 
-        # update score and potential score
         if self.player == PLAYER:
-            ai_potential_score -= result[0]
+            ai_potential_score -= player_potentials[row][col]
         else:
-            player_potential_score -= result[0]
+            player_potential_score -= ai_potentials[row][col]
 
+        my_print(f"score: {score}, potential: {potential} at {row}, {col}, aipo: {ai_potential_score}, "
+              f"pipo: {player_potential_score}")
         return State(board, moves, ai_score, player_score, ai_potential_score, player_potential_score,
                      player_potentials, ai_potentials, game_over, player)
 
     def check_score(self, row, col, player_potentials=None, ai_potentials=None, potential=False):
-
         # Check for a winning condition (horizontal, vertical, diagonal)
-        return [sum(x) for x in zip(
-            self.check_line(row, col, 0, 1, player_potentials, ai_potentials, potential),  # -
-            self.check_line(row, col, 1, 0, player_potentials, ai_potentials, potential),  # |
-            self.check_line(row, col, 1, 1, player_potentials, ai_potentials, potential),  # /
-            self.check_line(row, col, -1, 1, player_potentials, ai_potentials, potential)  # \
-        )]
+        a = self.check_line(row, col, 0, 1, player_potentials, ai_potentials, potential)  # -
+        b = self.check_line(row, col, 1, 0, player_potentials, ai_potentials, potential)  # |
+        c = self.check_line(row, col, 1, 1, player_potentials, ai_potentials, potential)  # /
+        d = self.check_line(row, col, -1, 1, player_potentials, ai_potentials, potential)           # \
+        return [sum(x) for x in zip(a, b, c, d)]
 
     def check_line(self, row, col, row_change, col_change, player_potentials=None, ai_potentials=None, potential=True):
+        # my_print(f"row: {row}, col: {col}, row_change: {row_change}, col_change: {col_change}", '-' * 50)
         count = 1
 
         # keep track of original play
@@ -108,9 +115,9 @@ class State:
         if is_valid(row, col):
             if self.board[row][col] == 0:
                 right_gap = (row, col)
-            elif is_valid(row, col) and self.board[row][col] == self.player:
+            elif self.board[row][col] == self.player:
                 count += 1
-
+        # my_print(f"right: {right_gap}")
         # reset to starting position
         row = r - row_change
         col = c - col_change
@@ -130,6 +137,7 @@ class State:
                 left_gap = (row, col)
             elif is_valid(row, col) and self.board[row][col] == self.player:
                 count += 1
+        # my_print(f"left: {left_gap}")
 
         score = max(0, count - 3)
 
@@ -154,16 +162,18 @@ class State:
                 else:
                     left_potential = left_potential - ai_potentials[left_gap[0]][left_gap[1]]
                     ai_potentials[left_gap[0]][left_gap[1]] = temp
-
+            my_print(f"right: {right_potential} at {right_gap}, left: {left_potential} at {left_gap}")
             return score, right_potential + left_potential
         else:
             return [score]
 
     def utility(self):
-        return self.ai_score - self.player_score + 0.75 * (self.ai_potential_score - self.player_potential_score)
+        # my_print(f"aipot: {self.ai_potential_score}, pipot: {self.player_potential_score}")
+        return self.ai_score - self.player_score + 0.5 * (self.ai_potential_score - self.player_potential_score)
 
 
 class Minimax:
+    ID_COUNTER = 1
     def __init__(self, game, depth, pruning=True, expectimax=False):
         self.game = game
         self.depth = depth
@@ -174,9 +184,17 @@ class Minimax:
             self.alpha = -math.inf
             self.beta = math.inf
 
-    def minimax(self, state, depth, alpha=-math.inf, beta=math.inf, pruning=True):
+    def minimax(self, state, depth, alpha=-math.inf, beta=math.inf, parent_id=0, pruning=True):
+        if parent_id == None:
+            self.tree.create_node(state.board, 0)
+            id = 0
+        else:
+            self.tree.create_node(state.board, self.ID_COUNTER, parent_id)
+            id = self.ID_COUNTER
+            self.ID_COUNTER += 1
+
         if VERBOSE:
-            print(f"depth: {depth}, player: {state.player}, score: {state.utility()}")
+            my_print(f"depth: {depth}, player: {state.player}, score: {state.utility()}")
 
         if depth == 0 or state.game_over == 0:
             return state.utility(), None
@@ -195,12 +213,13 @@ class Minimax:
                     continue
 
                 if pruning:
-                    value, _ = self.minimax(state.generate_child(i), depth - 1, alpha, beta)
+                    value, _ = self.minimax(state.generate_child(i), depth - 1, alpha, beta, parent_id=id)
+                    my_print(f"current move -> move: {i}, value: {value}")
                     alpha = max(alpha, value)
                     if alpha >= beta:
                         return value, i
                 elif self.expectimax:
-                    values, _ = self.minimax(state.generate_child(i), depth - 1, pruning=False)
+                    values, _ = self.minimax(state.generate_child(i), depth - 1,  parent_id=id, pruning=False)
                     if type(values) is float:
                         value = values
                     else:
@@ -208,16 +227,10 @@ class Minimax:
                         v2 = values[(i-1) % 7] * 0.2
                         v3 = values[(i+1) % 7] * 0.2
 
-                        value = v1
-                        if v2 > v1 and v2 > v3:
-                            i = (i-1) % 7
-                            value = v2
-                        elif v3 > v1 and v3 > v2:
-                            i = (i+1) % 7
-                            value = v3
+                        value = (v1+v2+v3) / 3
 
                 else:
-                    value, _ = self.minimax(state.generate_child(i), depth - 1, pruning=False)
+                    value, _ = self.minimax(state.generate_child(i), depth - 1,  parent_id=id, pruning=False)
 
                 if value > best_value:
                     best_value = value
@@ -235,16 +248,16 @@ class Minimax:
                     continue
 
                 if pruning:
-                    value, _ = self.minimax(state.generate_child(i), depth - 1, alpha, beta)# (10, 4)
+                    value, _ = self.minimax(state.generate_child(i), depth - 1, alpha, beta,  parent_id=id)# (10, 4)
                     # (12, 3)
                     beta = min(beta, value)                                                 # (15, 5)
                     if alpha >= beta:
                         return value, i
                 elif self.expectimax:
-                    values[i], _ = self.minimax(state.generate_child(i), depth - 1, pruning=False)
+                    values[i], _ = self.minimax(state.generate_child(i), depth - 1,  parent_id=id, pruning=False)
                     value = values[i]
                 else:
-                    value, _ = self.minimax(state.generate_child(i), depth - 1, pruning=False)
+                    value, _ = self.minimax(state.generate_child(i), depth - 1,  parent_id=id, pruning=False)
 
                 # update best value and move
                 if value < best_value:
@@ -261,10 +274,14 @@ class Minimax:
         state = State(self.game.board, self.game.moves, self.game.ai_score, self.game.player_score,
                       self.game.ai_potential_score, self.game.player_potential_score, self.game.player_potentials,
                       self.game.ai_potentials, self.game.game_over, AI)
+        self.tree = treelib.Tree()
         # get the best move
         if self.pruning:
-            _, move = self.minimax(state, self.depth, self.alpha, self.beta)
+            v, move = self.minimax(state, self.depth, self.alpha, self.beta, parent_id=None)
         else:
-            _, move = self.minimax(state, self.depth, pruning=False)
+            v, move = self.minimax(state, self.depth, parent_id=None, pruning=False)
 
+        # my_print(f"move: {move}, value: {v}")
+        self.ID_COUNTER = 1
+        # self.tree.show()
         return move
